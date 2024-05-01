@@ -1,7 +1,7 @@
 use ctor::ctor;
 use winapi::um::consoleapi;
 use std::{thread, time::Duration};
-use crate::{dumper::HonkaiDumper, il2cpp};
+use crate::{dumper::HonkaiDumper, unity::api};
 
 #[ctor]
 fn entry() {
@@ -12,7 +12,7 @@ fn entry() {
     println!("honkai-dumper");
 
     println!("initializing the il2cpp api");
-    let api = il2cpp::get_il2cpp_api();
+    let api = api::get_il2cpp_api();
 
     println!("dumping the methods");
     let dumper = HonkaiDumper::new(&api);

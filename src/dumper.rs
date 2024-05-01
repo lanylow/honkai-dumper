@@ -1,6 +1,6 @@
 use std::{ffi::c_void, fs::File, ptr::null};
 use serde_json::{json, Value};
-use crate::il2cpp::Il2Cpp;
+use crate::unity::api::Il2Cpp;
 
 #[derive(Clone, Copy)]
 pub struct HonkaiDumper<'a> {
@@ -33,7 +33,9 @@ impl<'a> HonkaiDumper<'a> {
   }
 
   fn verify_pointer(self, pointer: usize) -> bool {
-    return (pointer > self.il2cpp_api.game_assembly as usize) && (pointer < self.il2cpp_api.game_assembly as usize + self.il2cpp_api.game_assembly_size as usize);
+    return 
+      (pointer > self.il2cpp_api.game_assembly.handle as usize) && 
+      (pointer < self.il2cpp_api.game_assembly.handle as usize + self.il2cpp_api.game_assembly.size);
   }
 
   pub fn dump(&self) {
@@ -85,7 +87,7 @@ impl<'a> HonkaiDumper<'a> {
 
           let description = format!("{}{}::{}", class_namespace, class_name, method_name);
           let counted = Self::check_repeats(description.as_str(), &output);
-          let offset = pointer - self.il2cpp_api.game_assembly as usize;
+          let offset = pointer - self.il2cpp_api.game_assembly.handle as usize;
           output[counted] = json!(format!("0x{:x}", offset));
 
           count += 1;

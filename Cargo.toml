@@ -1,0 +1,13 @@
+[package]
+name = "honkai-dumper"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "library"
+crate-type = [ "cdylib" ]
+
+[dependencies]
+ctor = "0.2.8"
+serde_json = "1.0.116"
+winapi = { version = "0.3.9", features = [ "libloaderapi", "consoleapi" ] }

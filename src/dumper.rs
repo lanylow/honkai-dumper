@@ -14,12 +14,6 @@ impl<'a> HonkaiDumper<'a> {
     };
   }
 
-  fn replace_special_chars(string: &mut String) {
-    for i in vec!['<', '>', '`'] {
-      *string = string.replace(i, "_");
-    }
-  }
-
   fn check_repeats(original: &str, value: &Value) -> String {
     let mut counted = original.to_string();
     let mut occurences = 0;
@@ -64,9 +58,7 @@ impl<'a> HonkaiDumper<'a> {
           continue;
         }
 
-        let mut class_name = self.il2cpp_api.class_get_name(class);
-        Self::replace_special_chars(&mut class_name);
-        
+        let class_name = self.il2cpp_api.class_get_name(class);
         let mut class_namespace = self.il2cpp_api.class_get_namespace(class);
 
         if !class_namespace.is_empty() {
@@ -82,13 +74,11 @@ impl<'a> HonkaiDumper<'a> {
             continue;
           }
 
-          let mut method_name = self.il2cpp_api.method_get_name(method_info);
-          Self::replace_special_chars(&mut method_name);
-
+          let method_name = self.il2cpp_api.method_get_name(method_info);
           let description = format!("{}{}::{}", class_namespace, class_name, method_name);
           let counted = Self::check_repeats(description.as_str(), &output);
-          let offset = pointer - self.il2cpp_api.game_assembly.handle as usize;
-          output[counted] = json!(format!("0x{:x}", offset));
+
+          output[counted] = json!(format!("0x{:x}", pointer - self.il2cpp_api.game_assembly.handle as usize));
 
           count += 1;
         }

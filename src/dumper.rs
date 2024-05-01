@@ -32,6 +32,10 @@ impl<'a> HonkaiDumper<'a> {
     return counted;
   }
 
+  fn verify_pointer(self, pointer: usize) -> bool {
+    return (pointer > self.il2cpp_api.game_assembly as usize) && (pointer < self.il2cpp_api.game_assembly as usize + self.il2cpp_api.game_assembly_size as usize);
+  }
+
   pub fn dump(&self) {
     let mut output = json!({});
     let mut count = 0;
@@ -70,13 +74,19 @@ impl<'a> HonkaiDumper<'a> {
         let method_iter: *const c_void = null();
   
         while let Some(method_info) = self.il2cpp_api.class_get_methods(class, &method_iter) {
+          let pointer = unsafe { (*method_info).method_pointer as usize };
+
+          if !self.verify_pointer(pointer) {
+            continue;
+          }
+
           let mut method_name = self.il2cpp_api.method_get_name(method_info);
           Self::replace_special_chars(&mut method_name);
 
           let description = format!("{}{}::{}", class_namespace, class_name, method_name);
           let counted = Self::check_repeats(description.as_str(), &output);
-          let pointer = unsafe { (*method_info).method_pointer as usize - self.il2cpp_api.game_assembly as usize };
-          output[counted] = json!(format!("0x{:x}", pointer));
+          let offset = pointer - self.il2cpp_api.game_assembly as usize;
+          output[counted] = json!(format!("0x{:x}", offset));
 
           count += 1;
         }
@@ -86,7 +96,7 @@ impl<'a> HonkaiDumper<'a> {
     let mut file = File::create("methods.json").unwrap();
     serde_json::to_writer_pretty(&mut file, &output).unwrap();
 
-    println!("{} methods found and saved to methods.json", count);
+    println!("{} valid methods found and saved to methods.json", count);
     println!("done");
   }
 }

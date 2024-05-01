@@ -1,5 +1,5 @@
-use std::{ffi::{c_char, c_void, CStr, CString}, marker::PhantomData, ops::Deref, path::PathBuf};
-use winapi::um::libloaderapi::LoadLibraryA;
+use std::{ffi::{c_char, c_void, CStr, CString}, marker::PhantomData, mem::size_of, ops::Deref, path::PathBuf};
+use winapi::um::{libloaderapi::LoadLibraryA, processthreadsapi::GetCurrentProcess, psapi::{GetModuleInformation, MODULEINFO}};
 
 #[derive(Clone)]
 pub struct MethodPtr<T> {
@@ -62,6 +62,7 @@ impl Il2CppFunctions {
 pub struct Il2Cpp {
   pub unity_player: *mut c_void,
   pub game_assembly: *mut c_void,
+  pub game_assembly_size: u32,
   pub functions: Il2CppFunctions
 }
 
@@ -69,11 +70,13 @@ impl Il2Cpp {
   pub fn new(path: PathBuf) -> Self {
     let unity_player = Self::load_library(path.join("UnityPlayer.dll"));
     let game_assembly = Self::load_library(path.join("GameAssembly.dll"));
+    let game_assembly_size = Self::get_library_size(game_assembly);
     let functions = Il2CppFunctions::new(unity_player as usize);
 
     return Il2Cpp {
       unity_player: unity_player.cast(),
       game_assembly: game_assembly.cast(),
+      game_assembly_size: game_assembly_size,
       functions: functions
     };
   }
@@ -82,6 +85,14 @@ impl Il2Cpp {
     let native = CString::new(path.to_str().unwrap()).unwrap();
     let library = unsafe { LoadLibraryA(native.as_ptr()) };
     return library as *mut c_void;
+  }
+
+  fn get_library_size(handle: *mut c_void) -> u32 {
+    unsafe {
+      let mut module_info: MODULEINFO = std::mem::zeroed();
+      GetModuleInformation(GetCurrentProcess(), handle.cast(), &mut module_info, size_of::<MODULEINFO>() as u32);
+      return module_info.SizeOfImage;
+    }
   }
 
   fn to_string(native: *const c_char) -> String {

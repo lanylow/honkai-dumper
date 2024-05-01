@@ -10,4 +10,4 @@ crate-type = [ "cdylib" ]
 [dependencies]
 ctor = "0.2.8"
 serde_json = "1.0.116"
-winapi = { version = "0.3.9", features = [ "libloaderapi", "consoleapi" ] }
+winapi = { version = "0.3.9", features = [ "libloaderapi", "consoleapi", "psapi", "processthreadsapi" ] }

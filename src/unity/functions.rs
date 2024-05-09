@@ -16,16 +16,16 @@ pub struct Il2CppFunctions {
 
 impl Il2CppFunctions {
   pub fn new(base: usize) -> Self {
-    return Il2CppFunctions {
-      il2cpp_domain_get: get_method_ptr(base + 0x1cee5c0),
-      il2cpp_domain_get_assemblies: get_method_ptr(base + 0x1cee5d0),
-      il2cpp_assembly_get_image: get_method_ptr(base + 0x1cee488),
-      il2cpp_image_get_class_count: get_method_ptr(base + 0x1cee8f0),
-      il2cpp_image_get_class: get_method_ptr(base + 0x1cee8f8),
-      il2cpp_class_get_methods: get_method_ptr(base + 0x1cee4f0),
-      il2cpp_class_get_name: get_method_ptr(base + 0x1cee500),
-      il2cpp_class_get_namespace: get_method_ptr(base + 0x1cee510),
-      il2cpp_method_get_name: get_method_ptr(base + 0x1cee750)
-    };
+    Il2CppFunctions {
+      il2cpp_domain_get: get_method_ptr(base + 0x1cf2e48),
+      il2cpp_domain_get_assemblies: get_method_ptr(base + 0x1cf2e58),
+      il2cpp_assembly_get_image: get_method_ptr(base + 0x1cf2d10),
+      il2cpp_image_get_class_count: get_method_ptr(base + 0x1cf3178),
+      il2cpp_image_get_class: get_method_ptr(base + 0x1cf3180),
+      il2cpp_class_get_methods: get_method_ptr(base + 0x1cf2d78),
+      il2cpp_class_get_name: get_method_ptr(base + 0x1cf2d88),
+      il2cpp_class_get_namespace: get_method_ptr(base + 0x1cf2d98),
+      il2cpp_method_get_name: get_method_ptr(base + 0x1cf2fd8)
+    }
   }
 }

@@ -9,7 +9,7 @@ pub enum Il2CppError {
 
   #[error("failed to find {0}")]
   FileNotFound(&'static str),
-  #[error("funcion not found {0}")]
+  #[error("function not found {0}")]
   FunctionNotFound(&'static str)
 }
 
@@ -37,9 +37,9 @@ impl Il2Cpp {
     let functions = Il2CppFunctions::new(unity_player.handle as usize);
 
     Ok(Il2Cpp {
-      game_assembly: game_assembly,
-      unity_player: unity_player,
-      functions: functions
+      game_assembly,
+      unity_player,
+      functions
     })
   }
 

@@ -41,7 +41,7 @@ impl Module {
 
       Ok(Module {
         handle: handle.cast(),
-        size: size
+        size
       })
     }
   }

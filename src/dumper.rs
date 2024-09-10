@@ -23,13 +23,12 @@ impl<'a> HonkaiDumper<'a> {
       occurences += 1;
     }
 
-    return counted;
+    counted
   }
 
   fn verify_pointer(self, pointer: usize) -> bool {
-    return 
-      (pointer > self.il2cpp_api.game_assembly.handle as usize) && 
-      (pointer < self.il2cpp_api.game_assembly.handle as usize + self.il2cpp_api.game_assembly.size);
+    (pointer > self.il2cpp_api.game_assembly.handle as usize) &&
+      (pointer < self.il2cpp_api.game_assembly.handle as usize + self.il2cpp_api.game_assembly.size)
   }
 
   pub fn dump(&self) -> Result<(), Box<dyn Error>> {

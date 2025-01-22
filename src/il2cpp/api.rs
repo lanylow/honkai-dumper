@@ -7,19 +7,21 @@ pub enum Il2CppError {
   #[error(transparent)]
   Module(#[from] ModuleError),
 
-  #[error("failed to find {0}")]
+  #[error("file not found {0}")]
   FileNotFound(&'static str),
   #[error("function not found {0}")]
-  FunctionNotFound(&'static str)
+  FunctionNotFound(&'static str),
+  #[error("root path not found")]
+  RootNotFound
 }
 
-pub struct Il2Cpp {
+pub struct Il2CppApi {
   pub game_assembly: Module,
   pub unity_player: Module,
   pub functions: Il2CppFunctions
 }
 
-impl Il2Cpp {
+impl Il2CppApi {
   pub fn new(path: PathBuf) -> Result<Self, Il2CppError> {
     let game_assembly_path = path.join("GameAssembly.dll");
     let unity_player_path = path.join("UnityPlayer.dll");
@@ -36,7 +38,7 @@ impl Il2Cpp {
     let unity_player = Module::load(unity_player_path)?;
     let functions = Il2CppFunctions::new(unity_player.handle as usize);
 
-    Ok(Il2Cpp {
+    Ok(Il2CppApi {
       game_assembly,
       unity_player,
       functions
@@ -145,12 +147,14 @@ impl Il2Cpp {
   }
 }
 
-static mut API: Option<Il2Cpp> = None;
+static mut API: Option<Il2CppApi> = None;
 
-pub fn get_il2cpp_api() -> Result<&'static Il2Cpp, Box<dyn Error>> {
+pub fn get_il2cpp_api() -> Result<&'static Il2CppApi, Box<dyn Error>> {
   unsafe {
     if API.is_none() {
-      API = Some(Il2Cpp::new(std::env::current_exe()?.parent().unwrap().to_path_buf())?);
+      let exe_path = std::env::current_exe()?;
+      let root_path = exe_path.parent().ok_or(Il2CppError::RootNotFound)?.to_path_buf();
+      API = Some(Il2CppApi::new(root_path)?);
     }
   
     Ok(API.as_ref().ok_or("Failed to get the il2cpp api")?)

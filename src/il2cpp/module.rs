@@ -6,7 +6,7 @@ use winapi::{shared::minwindef::FALSE, um::{libloaderapi::LoadLibraryA, processt
 pub enum ModuleError {
   #[error("failed to convert PathBuf to str")]
   PathBufToStr,
-  #[error("failed to create a CString object")]
+  #[error("failed to create a CString")]
   CreateCString,
   #[error("failed to load a library")]
   LoadLibrary,
@@ -66,9 +66,9 @@ impl<T> Clone for MethodPtr<T> {
   }
 }
 
-pub fn get_method_ptr<T>(offset: usize) -> Option<MethodPtr<T>> {
+pub fn get_method_ptr<T>(address: usize) -> Option<MethodPtr<T>> {
   unsafe {
-    let ptr = *(offset as *mut usize);
+    let ptr = *(address as *mut usize);
 
     if ptr == 0 {
       return None;

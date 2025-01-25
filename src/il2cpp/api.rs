@@ -1,6 +1,41 @@
 use std::{error::Error, ffi::{c_void, CStr}, path::PathBuf, str::Utf8Error};
 use thiserror::Error;
+
 use super::{functions::Il2CppFunctions, module::{Module, ModuleError}, types::MethodInfo};
+
+macro_rules! get_function_safe {
+  ($self:ident, $name:ident) => {{
+    &$self.functions.$name.as_ref().ok_or(Il2CppError::FunctionNotFound(stringify!($name)))?
+  }};
+}
+
+macro_rules! cstr_to_string {
+  ($cstr:expr) => {{
+    let name = unsafe { CStr::from_ptr($cstr) };
+    name.to_str()?.to_string()
+  }};
+}
+
+const PRIMITIVE_TYPES: &[(&str, &str)] = &[
+  ("System.Void", "void"),
+  ("System.Boolean", "bool"),
+  ("System.Char", "char"),
+  ("System.SByte", "sbyte"),
+  ("System.Byte", "byte"),
+  ("System.Int16", "short"),
+  ("System.UInt16", "ushort"),
+  ("System.Int32", "int"),
+  ("System.UInt32", "uint"),
+  ("System.Int64", "long"),
+  ("System.UInt64", "ulong"),
+  ("System.Single", "float"),
+  ("System.Double", "double"),
+  ("System.String", "string"),
+  ("System.IntPtr", "IntPtr"),
+  ("System.UIntPtr", "UIntPtr"),
+  ("System.Object", "object"),
+  ("&", "")
+];
 
 #[derive(Debug, Error)]
 pub enum Il2CppError {
@@ -50,12 +85,7 @@ impl Il2CppApi {
   }
 
   pub fn domain_get(&self) -> Result<*const c_void, Il2CppError> {
-    let function = &self
-      .functions
-      .il2cpp_domain_get
-      .as_ref()
-      .ok_or(Il2CppError::FunctionNotFound("il2cpp_domain_get"))?;
-
+    let function = get_function_safe!(self, il2cpp_domain_get);
     let domain = function();
 
     if domain.is_null() {
@@ -66,12 +96,7 @@ impl Il2CppApi {
   }
 
   pub fn domain_get_assemblies(&self, domain: *const c_void, size: *const usize) -> Result<*const *const c_void, Il2CppError> {
-    let function = &self
-      .functions
-      .il2cpp_domain_get_assemblies
-      .as_ref()
-      .ok_or(Il2CppError::FunctionNotFound("il2cpp_domain_get_assemblies"))?;
-
+    let function = get_function_safe!(self, il2cpp_domain_get_assemblies);
     let assemblies = function(domain, size);
 
     if assemblies.is_null() {
@@ -82,12 +107,7 @@ impl Il2CppApi {
   }
 
   pub fn assembly_get_image(&self, assembly: *const c_void) -> Result<*const c_void, Il2CppError> {
-    let function = &self
-      .functions
-      .il2cpp_assembly_get_image
-      .as_ref()
-      .ok_or(Il2CppError::FunctionNotFound("il2cpp_assembly_get_image"))?;
-      
+    let function = get_function_safe!(self, il2cpp_assembly_get_image);
     let image = function(assembly);
 
     if image.is_null() {
@@ -97,23 +117,24 @@ impl Il2CppApi {
     Ok(image)
   }
 
-  pub fn image_get_class_count(&self, image: *const c_void) -> Result<usize, Il2CppError> {
-    let function = &self
-      .functions
-      .il2cpp_image_get_class_count
-      .as_ref()
-      .ok_or(Il2CppError::FunctionNotFound("il2cpp_image_get_class_count"))?;
+  pub fn image_get_name(&self, image: *const c_void) -> Result<String, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_image_get_name);
+    let name_c = function(image);
 
+    if name_c.is_null() {
+      return Err(Il2CppError::ReturnedNull("il2cpp_image_get_name"));
+    }
+
+    Ok(cstr_to_string!(name_c))
+  }
+
+  pub fn image_get_class_count(&self, image: *const c_void) -> Result<usize, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_image_get_class_count);
     Ok(function(image))
   }
 
   pub fn image_get_class(&self, image: *const c_void, index: usize) -> Result<*const c_void, Il2CppError> {
-    let function = &self
-      .functions
-      .il2cpp_image_get_class
-      .as_ref()
-      .ok_or(Il2CppError::FunctionNotFound("il2cpp_image_get_class"))?;
-
+    let function = get_function_safe!(self, il2cpp_image_get_class);
     let class = function(image, index);
 
     if class.is_null() {
@@ -123,70 +144,174 @@ impl Il2CppApi {
     Ok(class)
   }
 
-  pub fn class_get_methods(&self, class: *const c_void, iter: *const *const c_void) -> Result<Option<*const MethodInfo>, Il2CppError> {
-    let function = &self
-      .functions
-      .il2cpp_class_get_methods
-      .as_ref()
-      .ok_or(Il2CppError::FunctionNotFound("il2cpp_class_get_methods"))?;
+  pub fn class_get_fields(&self, class: *const c_void, iter: *const *const c_void) -> Result<Option<*const c_void>, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_class_get_fields);
+    let result = function(class, iter);
 
+    Ok(if result.is_null() { None } else { Some(result) })
+  }
+
+  pub fn class_get_methods(&self, class: *const c_void, iter: *const *const c_void) -> Result<Option<*const MethodInfo>, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_class_get_methods);
     let result = function(class, iter);
 
     Ok(if result.is_null() { None } else { Some(result) })
   }
 
   pub fn class_get_name(&self, class: *const c_void) -> Result<String, Il2CppError> {
-    let function = &self
-      .functions
-      .il2cpp_class_get_name
-      .as_ref()
-      .ok_or(Il2CppError::FunctionNotFound("il2cpp_class_get_name"))?;
-
+    let function = get_function_safe!(self, il2cpp_class_get_name);
     let name_c = function(class);
 
     if name_c.is_null() {
       return Err(Il2CppError::ReturnedNull("il2cpp_class_get_name"));
     }
 
-    let name = unsafe { CStr::from_ptr(name_c) };
-
-    Ok(name.to_str()?.to_string())
+    Ok(cstr_to_string!(name_c))
   }
 
   pub fn class_get_namespace(&self, class: *const c_void) -> Result<String, Il2CppError> {
-    let function = &self
-      .functions
-      .il2cpp_class_get_namespace
-      .as_ref()
-      .ok_or(Il2CppError::FunctionNotFound("il2cpp_class_get_namespace"))?;
-
+    let function = get_function_safe!(self, il2cpp_class_get_namespace);
     let name_c = function(class);
 
     if name_c.is_null() {
       return Err(Il2CppError::ReturnedNull("il2cpp_class_get_namespace"));
     }
 
-    let name = unsafe { CStr::from_ptr(name_c) };
+    Ok(cstr_to_string!(name_c))
+  }
 
-    Ok(name.to_str()?.to_string())
+  pub fn class_get_parent(&self, class: *const c_void) -> Result<*const c_void, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_class_get_parent);
+    let parent = function(class);
+
+    if parent.is_null() {
+      return Err(Il2CppError::ReturnedNull("il2cpp_class_get_parent"));
+    }
+
+    Ok(parent)
+  }
+
+  pub fn class_get_flags(&self, class: *const c_void) -> Result<i32, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_class_get_flags);
+    Ok(function(class))
+  }
+
+  pub fn class_from_type(&self, class_type: *const c_void) -> Result<*const c_void, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_class_from_type);
+    let class = function(class_type);
+
+    if class.is_null() {
+      return Err(Il2CppError::ReturnedNull("il2cpp_class_from_type"));
+    }
+
+    Ok(class)
+  }
+
+  pub fn class_is_enum(&self, class: *const c_void) -> Result<bool, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_class_is_enum);
+    Ok(function(class))
+  }
+
+  pub fn class_is_valuetype(&self, class: *const c_void) -> Result<bool, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_class_is_valuetype);
+    Ok(function(class))
+  }
+
+  pub fn field_get_flags(&self, field: *const c_void) -> Result<i32, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_field_get_flags);
+    Ok(function(field))
+  }
+
+  pub fn field_get_name(&self, field: *const c_void) -> Result<String, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_field_get_name);
+    let name_c = function(field);
+
+    if name_c.is_null() {
+      return Err(Il2CppError::ReturnedNull("il2cpp_field_get_name"));
+    }
+
+    Ok(cstr_to_string!(name_c))
+  }
+
+  pub fn field_get_offset(&self, field: *const c_void) -> Result<usize, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_field_get_offset);
+    Ok(function(field))
+  }
+
+  pub fn field_get_type(&self, field: *const c_void) -> Result<*const c_void, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_field_get_type);
+    let field_type = function(field);
+
+    if field_type.is_null() {
+      return Err(Il2CppError::ReturnedNull("il2cpp_field_get_type"));
+    }
+
+    Ok(field_type)
+  }
+
+  pub fn method_get_return_type(&self, method: *const MethodInfo) -> Result<*const c_void, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_method_get_return_type);
+    let return_type = function(method);
+
+    if return_type.is_null() {
+      return Err(Il2CppError::ReturnedNull("il2cpp_method_get_return_type"));
+    }
+
+    Ok(return_type)
   }
 
   pub fn method_get_name(&self, method: *const MethodInfo) -> Result<String, Il2CppError> {
-    let function = &self
-      .functions
-      .il2cpp_method_get_name
-      .as_ref()
-      .ok_or(Il2CppError::FunctionNotFound("il2cpp_method_get_name"))?;
-
+    let function = get_function_safe!(self, il2cpp_method_get_name);
     let name_c = function(method);
 
     if name_c.is_null() {
       return Err(Il2CppError::ReturnedNull("il2cpp_method_get_name"));
     }
 
-    let name = unsafe { CStr::from_ptr(name_c) };
+    Ok(cstr_to_string!(name_c))
+  }
 
-    Ok(name.to_str()?.to_string())
+  pub fn method_get_param_count(&self, method: *const MethodInfo) -> Result<u32, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_method_get_param_count);
+    Ok(function(method))
+  }
+
+  pub fn method_get_param(&self, method: *const MethodInfo, index: u32) -> Result<*const c_void, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_method_get_param);
+    let param = function(method, index);
+
+    if param.is_null() {
+      return Err(Il2CppError::ReturnedNull("il2cpp_method_get_param"));
+    }
+
+    Ok(param)
+  }
+
+  pub fn type_get_name(&self, _type: *const c_void) -> Result<String, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_type_get_name);
+    let name_c = function(_type);
+
+    if name_c.is_null() {
+      return Err(Il2CppError::ReturnedNull("il2cpp_type_get_name"));
+    }
+
+    let mut name = cstr_to_string!(name_c);
+
+    for &(k, v) in PRIMITIVE_TYPES {
+      name = name.replace(k, v);
+    }
+
+    Ok(name)
+  }
+
+  pub fn type_is_byref(&self, type_: *const c_void) -> Result<bool, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_type_is_byref);
+    Ok(function(type_))
+  }
+
+  pub fn type_get_attrs(&self, type_: *const c_void) -> Result<u32, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_type_get_attrs);
+    Ok(function(type_))
   }
 }
 

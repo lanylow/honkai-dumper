@@ -1,5 +1,6 @@
 use std::{collections::HashMap, error::Error, ffi::c_void, fs::File, ptr::null};
 use serde_json::json;
+
 use crate::il2cpp::api::{self, Il2CppApi};
 
 fn verify_pointer(il2cpp: &Il2CppApi, pointer: usize) -> bool {
@@ -77,7 +78,6 @@ pub fn dump() -> Result<(), Box<dyn Error>> {
   serde_json::to_writer_pretty(&mut file, &output).unwrap();
 
   println!("{} valid methods found and saved to methods.json", name_map.len());
-  println!("done");
 
   Ok(())
 }

@@ -47,36 +47,30 @@ impl Module {
   }
 }
 
-pub struct MethodPtr<T> {
-  pub ptr: *mut c_void,
+pub struct FunctionPtr<T> {
+  pub ptr: *const c_void,
   pd: PhantomData<T>
 }
 
-impl<T> Deref for MethodPtr<T> {
+impl<T> Deref for FunctionPtr<T> {
   type Target = T;
 
   fn deref(&self) -> &T {
-    unsafe { &*(&self.ptr as *const *mut _ as *const T) }
+    unsafe { &*(&self.ptr as *const *const _ as *const T) }
   }
 }
 
-impl<T> Clone for MethodPtr<T> {
+impl<T> Clone for FunctionPtr<T> {
   fn clone(&self) -> Self {
-    MethodPtr { ..*self }
+    FunctionPtr { ..*self }
   }
 }
 
-pub fn get_method_ptr<T>(address: usize) -> Option<MethodPtr<T>> {
-  unsafe {
-    let ptr = *(address as *mut usize);
-
-    if ptr == 0 {
-      return None;
-    }
-
-    Some(MethodPtr {
-      ptr: ptr as *mut c_void,
+impl<T> FunctionPtr<T> {
+  pub fn new(address: *const c_void) -> FunctionPtr<T> {
+    FunctionPtr {
+      ptr: address,
       pd: PhantomData
-    })
+    }
   }
 }

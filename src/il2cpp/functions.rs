@@ -47,7 +47,7 @@ pub struct Il2CppFunctions {
 
 impl Il2CppFunctions {
   pub fn new(base: usize) -> Self {
-    let funcs = (base + 0x1df0628) as *const *const c_void;
+    let funcs = (base + 0x1e645c0) as *const *const c_void;
 
     Il2CppFunctions {
       // Required for the method dumper to work
@@ -57,9 +57,9 @@ impl Il2CppFunctions {
       il2cpp_class_get_namespace: index!(funcs, 39),
       il2cpp_domain_get: index!(funcs, 63),
       il2cpp_domain_get_assemblies: index!(funcs, 65),
-      il2cpp_method_get_name: index!(funcs, 116),
-      il2cpp_image_get_class_count: index!(funcs, 168),
-      il2cpp_image_get_class: index!(funcs, 169),
+      il2cpp_method_get_name: index!(funcs, 117),
+      il2cpp_image_get_class_count: index!(funcs, 169),
+      il2cpp_image_get_class: index!(funcs, 170),
 
       // Optional for the C# dumper
       il2cpp_class_get_fields: index!(funcs, 31),
@@ -72,13 +72,13 @@ impl Il2CppFunctions {
       il2cpp_field_get_name: index!(funcs, 73),
       il2cpp_field_get_offset: index!(funcs, 75),
       il2cpp_field_get_type: index!(funcs, 76),
-      il2cpp_method_get_return_type: index!(funcs, 115),
-      il2cpp_method_get_param_count: index!(funcs, 122),
-      il2cpp_method_get_param: index!(funcs, 123),
-      il2cpp_type_get_name: index!(funcs, 160),
-      il2cpp_type_is_byref: index!(funcs, 161),
-      il2cpp_type_get_attrs: index!(funcs, 162),
-      il2cpp_image_get_name: index!(funcs, 167)
+      il2cpp_method_get_return_type: index!(funcs, 116),
+      il2cpp_method_get_param_count: index!(funcs, 123),
+      il2cpp_method_get_param: index!(funcs, 124),
+      il2cpp_type_get_name: index!(funcs, 161),
+      il2cpp_type_is_byref: index!(funcs, 162),
+      il2cpp_type_get_attrs: index!(funcs, 163),
+      il2cpp_image_get_name: index!(funcs, 168)
     }
   }
 }

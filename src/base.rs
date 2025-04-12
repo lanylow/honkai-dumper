@@ -12,11 +12,11 @@ fn init() -> Result<(), Box<dyn Error>> {
 
   println!("dumping");
 
-  // Use the following to only dump the method offsets
+  // Dumps only the method offsets
   methoddumper::dump()?;
 
-  // Use the following to dump all classes, fields and methods
-  // csdumper::dump()?;
+  // Dumsp all classes, fields and methods
+  csdumper::dump()?;
 
   println!("done");
 

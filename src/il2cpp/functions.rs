@@ -47,7 +47,7 @@ pub struct Il2CppFunctions {
 
 impl Il2CppFunctions {
   pub fn new(base: usize) -> Self {
-    let funcs = (base + 0x1e645c0) as *const *const c_void;
+    let funcs = (base + 0x1e71430) as *const *const c_void;
 
     Il2CppFunctions {
       // Required for the method dumper to work

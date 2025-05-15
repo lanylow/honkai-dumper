@@ -53,11 +53,14 @@ fn write_fields(class: *const c_void, is_valuetype: bool) -> Result<String, Box<
 
     output.push_str(access_str);
 
+    let mut is_static = false;
+
     if flags & FIELD_ATTRIBUTE_LITERAL != 0 {
       output.push_str("const ");
     }
     else {
       if flags & FIELD_ATTRIBUTE_STATIC != 0 {
+        is_static = true;
         output.push_str("static ");
       }
 
@@ -67,12 +70,16 @@ fn write_fields(class: *const c_void, is_valuetype: bool) -> Result<String, Box<
     }
 
     let field_type = il2cpp.field_get_type(field)?;
-    let field_offset = il2cpp.field_get_offset(field)?;
+    let mut field_offset = il2cpp.field_get_offset(field)?;
+
+    if is_valuetype && !is_static && field_offset > 0 {
+      field_offset -= 0x10;
+    }
 
     let type_name = il2cpp.type_get_name(field_type)?;
     let field_name = il2cpp.field_get_name(field)?;
 
-    let fmt = format!("{} {}; // 0x{:x}\n", type_name, field_name, field_offset - (0x10 * is_valuetype as usize));
+    let fmt = format!("{} {}; // 0x{:x}\n", type_name, field_name, field_offset);
     output.push_str(fmt.as_str());
   }
 

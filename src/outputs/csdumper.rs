@@ -28,7 +28,7 @@ fn write_images() -> Result<String, Box<dyn Error>> {
   Ok(output)
 }
 
-fn write_fields(class: *const c_void) -> Result<String, Box<dyn Error>> {
+fn write_fields(class: *const c_void, is_valuetype: bool) -> Result<String, Box<dyn Error>> {
   let il2cpp = api::get_il2cpp_api()?;
   let mut output = String::new();
 
@@ -72,7 +72,7 @@ fn write_fields(class: *const c_void) -> Result<String, Box<dyn Error>> {
     let type_name = il2cpp.type_get_name(field_type)?;
     let field_name = il2cpp.field_get_name(field)?;
 
-    let fmt = format!("{} {}; // 0x{:x}\n", type_name, field_name, field_offset);
+    let fmt = format!("{} {}; // 0x{:x}\n", type_name, field_name, field_offset - (0x10 * is_valuetype as usize));
     output.push_str(fmt.as_str());
   }
 
@@ -248,14 +248,19 @@ fn write_class(class: *const c_void) -> Result<String, Box<dyn Error>> {
   let name = il2cpp.class_get_name(class)?;
   output.push_str(name.as_str());
 
-  if let Some(parent) = il2cpp.class_get_parent(class).ok() {
-    let name = il2cpp.class_get_name(parent)?;
-    let fmt = format!(" : {}", name);
-    output.push_str(fmt.as_str());
+  let parent = il2cpp.class_get_parent(class);
+
+  if parent.is_ok() && !is_valuetype && !is_enum {
+    let name = il2cpp.class_get_name(parent.unwrap())?;
+
+    if name != "Object" {
+      let fmt = format!(" : {}", name);
+      output.push_str(fmt.as_str());
+    }
   }
 
   output.push_str("\n{");
-  output.push_str(write_fields(class)?.as_str());
+  output.push_str(write_fields(class, is_valuetype)?.as_str());
   output.push_str(write_methods(class)?.as_str());
   output.push_str("}\n");
 

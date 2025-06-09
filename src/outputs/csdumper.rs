@@ -255,15 +255,26 @@ fn write_class(class: *const c_void) -> Result<String, Box<dyn Error>> {
   let name = il2cpp.class_get_name(class)?;
   output.push_str(name.as_str());
 
-  let parent = il2cpp.class_get_parent(class);
+  let mut extends = vec![]; 
 
-  if parent.is_ok() && !is_valuetype && !is_enum {
-    let name = il2cpp.class_get_name(parent.unwrap())?;
+  if let Some(parent) = il2cpp.class_get_parent(class).ok() {
+    let name = il2cpp.class_get_name(parent)?;
 
-    if name != "Object" {
-      let fmt = format!(" : {}", name);
-      output.push_str(fmt.as_str());
+    if !is_valuetype && !is_enum && name != "Object" {
+      extends.push(name);
     }
+  }
+
+  let interface_ier: *const c_void = null(); 
+
+  while let Some(interface) = il2cpp.class_get_interfaces(class, &interface_ier)? {
+    let name = il2cpp.class_get_name(interface)?;
+    extends.push(name);
+  }
+
+  if !extends.is_empty() {
+    let fmt = format!(" : {}", extends.join(", "));
+    output.push_str(fmt.as_str());
   }
 
   output.push_str("\n{");

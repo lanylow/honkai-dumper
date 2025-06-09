@@ -14,6 +14,7 @@ pub struct Il2CppFunctions {
   pub il2cpp_assembly_get_image: Option<FunctionPtr<fn(*const c_void) -> *const c_void>>,
 
   pub il2cpp_class_get_fields: Option<FunctionPtr<fn(*const c_void, *const *const c_void) -> *const c_void>>,
+  pub il2cpp_class_get_interfaces: Option<FunctionPtr<fn(*const c_void, *const *const c_void) -> *const c_void>>,
   pub il2cpp_class_get_methods: Option<FunctionPtr<fn(*const c_void, *const *const c_void) -> *const MethodInfo>>,
   pub il2cpp_class_get_name: Option<FunctionPtr<fn(*const c_void) -> *const c_char>>,
   pub il2cpp_class_get_namespace: Option<FunctionPtr<fn(*const c_void) -> *const c_char>>,
@@ -63,6 +64,7 @@ impl Il2CppFunctions {
 
       // Optional for the C# dumper
       il2cpp_class_get_fields: index!(funcs, 31),
+      il2cpp_class_get_interfaces: index!(funcs, 33),
       il2cpp_class_get_parent: index!(funcs, 40),
       il2cpp_class_is_valuetype: index!(funcs, 43),
       il2cpp_class_get_flags: index!(funcs, 45),

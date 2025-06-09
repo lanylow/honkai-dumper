@@ -151,6 +151,13 @@ impl Il2CppApi {
     Ok(if result.is_null() { None } else { Some(result) })
   }
 
+  pub fn class_get_interfaces(&self, class: *const c_void, iter: *const *const c_void) -> Result<Option<*const c_void>, Il2CppError> {
+    let function = get_function_safe!(self, il2cpp_class_get_interfaces);
+    let result = function(class, iter);
+
+    Ok(if result.is_null() { None } else { Some(result) })
+  }
+
   pub fn class_get_methods(&self, class: *const c_void, iter: *const *const c_void) -> Result<Option<*const MethodInfo>, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_class_get_methods);
     let result = function(class, iter);

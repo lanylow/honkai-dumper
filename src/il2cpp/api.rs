@@ -1,7 +1,7 @@
 use std::{error::Error, ffi::{c_void, CStr}, path::PathBuf, str::Utf8Error};
 use thiserror::Error;
 
-use super::{functions::Il2CppFunctions, module::{Module, ModuleError}, types::MethodInfo};
+use super::{functions::Il2CppFunctions, module::{Module, ModuleError}, types::*};
 
 macro_rules! get_function_safe {
   ($self:ident, $name:ident) => {{
@@ -84,7 +84,7 @@ impl Il2CppApi {
     })
   }
 
-  pub fn domain_get(&self) -> Result<*const c_void, Il2CppError> {
+  pub fn domain_get(&self) -> Result<*const Il2CppDomain, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_domain_get);
     let domain = function();
 
@@ -95,7 +95,7 @@ impl Il2CppApi {
     Ok(domain)
   }
 
-  pub fn domain_get_assemblies(&self, domain: *const c_void, size: *const usize) -> Result<*const *const c_void, Il2CppError> {
+  pub fn domain_get_assemblies(&self, domain: *const Il2CppDomain, size: *const usize) -> Result<*const *const Il2CppAssembly, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_domain_get_assemblies);
     let assemblies = function(domain, size);
 
@@ -106,7 +106,7 @@ impl Il2CppApi {
     Ok(assemblies)
   }
 
-  pub fn assembly_get_image(&self, assembly: *const c_void) -> Result<*const c_void, Il2CppError> {
+  pub fn assembly_get_image(&self, assembly: *const Il2CppAssembly) -> Result<*const Il2CppImage, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_assembly_get_image);
     let image = function(assembly);
 
@@ -117,7 +117,7 @@ impl Il2CppApi {
     Ok(image)
   }
 
-  pub fn image_get_name(&self, image: *const c_void) -> Result<String, Il2CppError> {
+  pub fn image_get_name(&self, image: *const Il2CppImage) -> Result<String, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_image_get_name);
     let name_c = function(image);
 
@@ -128,12 +128,12 @@ impl Il2CppApi {
     Ok(cstr_to_string!(name_c))
   }
 
-  pub fn image_get_class_count(&self, image: *const c_void) -> Result<usize, Il2CppError> {
+  pub fn image_get_class_count(&self, image: *const Il2CppImage) -> Result<usize, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_image_get_class_count);
     Ok(function(image))
   }
 
-  pub fn image_get_class(&self, image: *const c_void, index: usize) -> Result<*const c_void, Il2CppError> {
+  pub fn image_get_class(&self, image: *const Il2CppImage, index: usize) -> Result<*const Il2CppClass, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_image_get_class);
     let class = function(image, index);
 
@@ -144,28 +144,25 @@ impl Il2CppApi {
     Ok(class)
   }
 
-  pub fn class_get_fields(&self, class: *const c_void, iter: *const *const c_void) -> Result<Option<*const c_void>, Il2CppError> {
+  pub fn class_get_fields(&self, class: *const Il2CppClass, iter: *const *const c_void) -> Result<Option<*const FieldInfo>, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_class_get_fields);
     let result = function(class, iter);
-
     Ok(if result.is_null() { None } else { Some(result) })
   }
 
-  pub fn class_get_interfaces(&self, class: *const c_void, iter: *const *const c_void) -> Result<Option<*const c_void>, Il2CppError> {
+  pub fn class_get_interfaces(&self, class: *const Il2CppClass, iter: *const *const c_void) -> Result<Option<*const Il2CppClass>, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_class_get_interfaces);
     let result = function(class, iter);
-
     Ok(if result.is_null() { None } else { Some(result) })
   }
 
-  pub fn class_get_methods(&self, class: *const c_void, iter: *const *const c_void) -> Result<Option<*const MethodInfo>, Il2CppError> {
+  pub fn class_get_methods(&self, class: *const Il2CppClass, iter: *const *const c_void) -> Result<Option<*const MethodInfo>, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_class_get_methods);
     let result = function(class, iter);
-
     Ok(if result.is_null() { None } else { Some(result) })
   }
 
-  pub fn class_get_name(&self, class: *const c_void) -> Result<String, Il2CppError> {
+  pub fn class_get_name(&self, class: *const Il2CppClass) -> Result<String, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_class_get_name);
     let name_c = function(class);
 
@@ -176,7 +173,7 @@ impl Il2CppApi {
     Ok(cstr_to_string!(name_c))
   }
 
-  pub fn class_get_namespace(&self, class: *const c_void) -> Result<String, Il2CppError> {
+  pub fn class_get_namespace(&self, class: *const Il2CppClass) -> Result<String, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_class_get_namespace);
     let name_c = function(class);
 
@@ -187,7 +184,7 @@ impl Il2CppApi {
     Ok(cstr_to_string!(name_c))
   }
 
-  pub fn class_get_parent(&self, class: *const c_void) -> Result<*const c_void, Il2CppError> {
+  pub fn class_get_parent(&self, class: *const Il2CppClass) -> Result<*const Il2CppClass, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_class_get_parent);
     let parent = function(class);
 
@@ -198,12 +195,12 @@ impl Il2CppApi {
     Ok(parent)
   }
 
-  pub fn class_get_flags(&self, class: *const c_void) -> Result<i32, Il2CppError> {
+  pub fn class_get_flags(&self, class: *const Il2CppClass) -> Result<i32, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_class_get_flags);
     Ok(function(class))
   }
 
-  pub fn class_from_type(&self, class_type: *const c_void) -> Result<*const c_void, Il2CppError> {
+  pub fn class_from_type(&self, class_type: *const Il2CppType) -> Result<*const Il2CppClass, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_class_from_type);
     let class = function(class_type);
 
@@ -214,22 +211,22 @@ impl Il2CppApi {
     Ok(class)
   }
 
-  pub fn class_is_enum(&self, class: *const c_void) -> Result<bool, Il2CppError> {
+  pub fn class_is_enum(&self, class: *const Il2CppClass) -> Result<bool, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_class_is_enum);
     Ok(function(class))
   }
 
-  pub fn class_is_valuetype(&self, class: *const c_void) -> Result<bool, Il2CppError> {
+  pub fn class_is_valuetype(&self, class: *const Il2CppClass) -> Result<bool, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_class_is_valuetype);
     Ok(function(class))
   }
 
-  pub fn field_get_flags(&self, field: *const c_void) -> Result<i32, Il2CppError> {
+  pub fn field_get_flags(&self, field: *const FieldInfo) -> Result<i32, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_field_get_flags);
     Ok(function(field))
   }
 
-  pub fn field_get_name(&self, field: *const c_void) -> Result<String, Il2CppError> {
+  pub fn field_get_name(&self, field: *const FieldInfo) -> Result<String, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_field_get_name);
     let name_c = function(field);
 
@@ -240,12 +237,12 @@ impl Il2CppApi {
     Ok(cstr_to_string!(name_c))
   }
 
-  pub fn field_get_offset(&self, field: *const c_void) -> Result<usize, Il2CppError> {
+  pub fn field_get_offset(&self, field: *const FieldInfo) -> Result<usize, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_field_get_offset);
     Ok(function(field))
   }
 
-  pub fn field_get_type(&self, field: *const c_void) -> Result<*const c_void, Il2CppError> {
+  pub fn field_get_type(&self, field: *const FieldInfo) -> Result<*const Il2CppType, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_field_get_type);
     let field_type = function(field);
 
@@ -256,7 +253,7 @@ impl Il2CppApi {
     Ok(field_type)
   }
 
-  pub fn method_get_return_type(&self, method: *const MethodInfo) -> Result<*const c_void, Il2CppError> {
+  pub fn method_get_return_type(&self, method: *const MethodInfo) -> Result<*const Il2CppType, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_method_get_return_type);
     let return_type = function(method);
 
@@ -283,7 +280,7 @@ impl Il2CppApi {
     Ok(function(method))
   }
 
-  pub fn method_get_param(&self, method: *const MethodInfo, index: u32) -> Result<*const c_void, Il2CppError> {
+  pub fn method_get_param(&self, method: *const MethodInfo, index: u32) -> Result<*const Il2CppType, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_method_get_param);
     let param = function(method, index);
 
@@ -294,7 +291,7 @@ impl Il2CppApi {
     Ok(param)
   }
 
-  pub fn type_get_name(&self, _type: *const c_void) -> Result<String, Il2CppError> {
+  pub fn type_get_name(&self, _type: *const Il2CppType) -> Result<String, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_type_get_name);
     let name_c = function(_type);
 
@@ -311,12 +308,12 @@ impl Il2CppApi {
     Ok(name)
   }
 
-  pub fn type_is_byref(&self, type_: *const c_void) -> Result<bool, Il2CppError> {
+  pub fn type_is_byref(&self, type_: *const Il2CppType) -> Result<bool, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_type_is_byref);
     Ok(function(type_))
   }
 
-  pub fn type_get_attrs(&self, type_: *const c_void) -> Result<u32, Il2CppError> {
+  pub fn type_get_attrs(&self, type_: *const Il2CppType) -> Result<u32, Il2CppError> {
     let function = get_function_safe!(self, il2cpp_type_get_attrs);
     Ok(function(type_))
   }

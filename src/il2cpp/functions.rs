@@ -1,6 +1,6 @@
 use std::ffi::{c_char, c_void};
 
-use super::{types::MethodInfo, module::FunctionPtr};
+use super::{types::*, module::FunctionPtr};
 
 macro_rules! index {
   ($start:expr, $index:expr) => {{
@@ -11,44 +11,44 @@ macro_rules! index {
 
 #[derive(Clone)]
 pub struct Il2CppFunctions {
-  pub il2cpp_assembly_get_image: Option<FunctionPtr<fn(*const c_void) -> *const c_void>>,
+  pub il2cpp_assembly_get_image: Option<FunctionPtr<fn(*const Il2CppAssembly) -> *const Il2CppImage>>,
 
-  pub il2cpp_class_get_fields: Option<FunctionPtr<fn(*const c_void, *const *const c_void) -> *const c_void>>,
-  pub il2cpp_class_get_interfaces: Option<FunctionPtr<fn(*const c_void, *const *const c_void) -> *const c_void>>,
-  pub il2cpp_class_get_methods: Option<FunctionPtr<fn(*const c_void, *const *const c_void) -> *const MethodInfo>>,
-  pub il2cpp_class_get_name: Option<FunctionPtr<fn(*const c_void) -> *const c_char>>,
-  pub il2cpp_class_get_namespace: Option<FunctionPtr<fn(*const c_void) -> *const c_char>>,
-  pub il2cpp_class_get_parent: Option<FunctionPtr<fn(*const c_void) -> *const c_void>>,
-  pub il2cpp_class_is_valuetype: Option<FunctionPtr<fn(*const c_void) -> bool>>,
-  pub il2cpp_class_get_flags: Option<FunctionPtr<fn(*const c_void) -> i32>>,
-  pub il2cpp_class_from_type: Option<FunctionPtr<fn(*const c_void) -> *const c_void>>,
-  pub il2cpp_class_is_enum: Option<FunctionPtr<fn(*const c_void) -> bool>>,
+  pub il2cpp_class_get_fields: Option<FunctionPtr<fn(*const Il2CppClass, *const *const c_void) -> *const FieldInfo>>,
+  pub il2cpp_class_get_interfaces: Option<FunctionPtr<fn(*const Il2CppClass, *const *const c_void) -> *const Il2CppClass>>,
+  pub il2cpp_class_get_methods: Option<FunctionPtr<fn(*const Il2CppClass, *const *const c_void) -> *const MethodInfo>>,
+  pub il2cpp_class_get_name: Option<FunctionPtr<fn(*const Il2CppClass) -> *const c_char>>,
+  pub il2cpp_class_get_namespace: Option<FunctionPtr<fn(*const Il2CppClass) -> *const c_char>>,
+  pub il2cpp_class_get_parent: Option<FunctionPtr<fn(*const Il2CppClass) -> *const Il2CppClass>>,
+  pub il2cpp_class_is_valuetype: Option<FunctionPtr<fn(*const Il2CppClass) -> bool>>,
+  pub il2cpp_class_get_flags: Option<FunctionPtr<fn(*const Il2CppClass) -> i32>>,
+  pub il2cpp_class_from_type: Option<FunctionPtr<fn(*const Il2CppType) -> *const Il2CppClass>>,
+  pub il2cpp_class_is_enum: Option<FunctionPtr<fn(*const Il2CppClass) -> bool>>,
 
-  pub il2cpp_domain_get: Option<FunctionPtr<fn() -> *const c_void>>,
-  pub il2cpp_domain_get_assemblies: Option<FunctionPtr<fn(*const c_void, *const usize) -> *const *const c_void>>,
+  pub il2cpp_domain_get: Option<FunctionPtr<fn() -> *const Il2CppDomain>>,
+  pub il2cpp_domain_get_assemblies: Option<FunctionPtr<fn(*const Il2CppDomain, *const usize) -> *const *const Il2CppAssembly>>,
   
-  pub il2cpp_field_get_flags: Option<FunctionPtr<fn(*const c_void) -> i32>>,
-  pub il2cpp_field_get_name: Option<FunctionPtr<fn(*const c_void) -> *const c_char>>,
-  pub il2cpp_field_get_offset: Option<FunctionPtr<fn(*const c_void) -> usize>>,
-  pub il2cpp_field_get_type: Option<FunctionPtr<fn(*const c_void) -> *const c_void>>,
+  pub il2cpp_field_get_flags: Option<FunctionPtr<fn(*const FieldInfo) -> i32>>,
+  pub il2cpp_field_get_name: Option<FunctionPtr<fn(*const FieldInfo) -> *const c_char>>,
+  pub il2cpp_field_get_offset: Option<FunctionPtr<fn(*const FieldInfo) -> usize>>,
+  pub il2cpp_field_get_type: Option<FunctionPtr<fn(*const FieldInfo) -> *const Il2CppType>>,
 
-  pub il2cpp_method_get_return_type: Option<FunctionPtr<fn(*const MethodInfo) -> *const c_void>>,
+  pub il2cpp_method_get_return_type: Option<FunctionPtr<fn(*const MethodInfo) -> *const Il2CppType>>,
   pub il2cpp_method_get_name: Option<FunctionPtr<fn(*const MethodInfo) -> *const c_char>>,
   pub il2cpp_method_get_param_count: Option<FunctionPtr<fn(*const MethodInfo) -> u32>>,
-  pub il2cpp_method_get_param: Option<FunctionPtr<fn(*const MethodInfo, u32) -> *const c_void>>,
+  pub il2cpp_method_get_param: Option<FunctionPtr<fn(*const MethodInfo, u32) -> *const Il2CppType>>,
 
-  pub il2cpp_type_get_name: Option<FunctionPtr<fn(*const c_void) -> *const c_char>>,
-  pub il2cpp_type_is_byref: Option<FunctionPtr<fn(*const c_void) -> bool>>,
-  pub il2cpp_type_get_attrs: Option<FunctionPtr<fn(*const c_void) -> u32>>,
+  pub il2cpp_type_get_name: Option<FunctionPtr<fn(*const Il2CppType) -> *const c_char>>,
+  pub il2cpp_type_is_byref: Option<FunctionPtr<fn(*const Il2CppType) -> bool>>,
+  pub il2cpp_type_get_attrs: Option<FunctionPtr<fn(*const Il2CppType) -> u32>>,
 
-  pub il2cpp_image_get_name: Option<FunctionPtr<fn(*const c_void) -> *const c_char>>,
-  pub il2cpp_image_get_class_count: Option<FunctionPtr<fn(*const c_void) -> usize>>,
-  pub il2cpp_image_get_class: Option<FunctionPtr<fn(*const c_void, usize) -> *const c_void>>
+  pub il2cpp_image_get_name: Option<FunctionPtr<fn(*const Il2CppImage) -> *const c_char>>,
+  pub il2cpp_image_get_class_count: Option<FunctionPtr<fn(*const Il2CppImage) -> usize>>,
+  pub il2cpp_image_get_class: Option<FunctionPtr<fn(*const Il2CppImage, usize) -> *const Il2CppClass>>
 }
 
 impl Il2CppFunctions {
   pub fn new(base: usize) -> Self {
-    let funcs = (base + 0x1e89278) as *const *const c_void;
+    let funcs = (base + 0x1eba108) as *const *const c_void;
 
     Il2CppFunctions {
       // Required for the method dumper to work

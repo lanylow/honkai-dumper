@@ -8,7 +8,7 @@ pub struct Il2CppType;
 
 #[repr(C)]
 pub struct MethodInfo {
-  pub invoker_method: *const c_void,
+  pub klass: *const Il2CppClass,
   pub method_pointer: *const c_void,
   _pad: [u8; 0x20],
   pub flags: u16

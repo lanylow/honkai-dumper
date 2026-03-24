@@ -9,6 +9,7 @@ crate-type = [ "cdylib" ]
 
 [dependencies]
 ctor = "0.2.8"
+pelite = "0.10.0"
 serde_json = "1.0.116"
 thiserror = "1.0.59"
 winapi = { version = "0.3.9", features = [ "libloaderapi", "consoleapi", "psapi", "processthreadsapi" ] }

@@ -1,5 +1,7 @@
-use std::{error::Error, ffi::{c_void, CStr}, path::PathBuf, str::Utf8Error};
+use std::{ffi::{CStr, c_void}, path::PathBuf, str::Utf8Error, sync::OnceLock};
 use thiserror::Error;
+
+use crate::il2cpp::utils::scan_unity_player;
 
 use super::{functions::Il2CppFunctions, module::{Module, ModuleError}, types::*};
 
@@ -74,8 +76,13 @@ impl Il2CppApi {
     }
 
     let game_assembly = Module::load(game_assembly_path)?;
-    let unity_player = Module::load(unity_player_path)?;
-    let functions = Il2CppFunctions::new(unity_player.handle as usize);
+    let unity_player = Module::load(unity_player_path.clone())?;
+    let qword = scan_unity_player(unity_player_path.clone())
+        .ok_or(Il2CppError::RootNotFound)?;
+
+
+
+    let functions = Il2CppFunctions::new(unity_player.handle as usize + qword );
 
     Ok(Il2CppApi {
       game_assembly,
@@ -319,16 +326,17 @@ impl Il2CppApi {
   }
 }
 
-static mut API: Option<Il2CppApi> = None;
+static API: OnceLock<Il2CppApi> = OnceLock::new();
+unsafe impl Send for Il2CppApi {}
+unsafe impl Sync for Il2CppApi {}
 
-pub fn get_il2cpp_api() -> Result<&'static Il2CppApi, Box<dyn Error>> {
-  unsafe {
-    if API.is_none() {
-      let exe_path = std::env::current_exe()?;
-      let root_path = exe_path.parent().ok_or(Il2CppError::RootNotFound)?.to_path_buf();
-      API = Some(Il2CppApi::new(root_path)?);
-    }
-  
-    Ok(API.as_ref().ok_or("Failed to get the il2cpp api")?)
-  }
+pub fn get_il2cpp_api() -> &'static Il2CppApi {
+    API.get_or_init(|| {
+        let exe_path = std::env::current_exe().expect("Failed to get exe path");
+        let root_path = exe_path.parent()
+            .expect("Failed to get root path")
+            .to_path_buf();
+        
+        Il2CppApi::new(root_path).expect("Failed to initialize Il2CppApi")
+    })
 }

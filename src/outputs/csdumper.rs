@@ -3,7 +3,7 @@ use std::{error::Error, ffi::c_void, fs::File, io::Write, ptr::null};
 use crate::il2cpp::{api, constants::*, types::Il2CppClass};
 
 fn write_images() -> Result<String, Box<dyn Error>> {
-  let il2cpp = api::get_il2cpp_api()?;
+  let il2cpp = api::get_il2cpp_api();
   let mut output = String::new();
 
   let domain = il2cpp.domain_get()?;
@@ -29,7 +29,7 @@ fn write_images() -> Result<String, Box<dyn Error>> {
 }
 
 fn write_fields(class: *const Il2CppClass, is_valuetype: bool) -> Result<String, Box<dyn Error>> {
-  let il2cpp = api::get_il2cpp_api()?;
+  let il2cpp = api::get_il2cpp_api();
   let mut output = String::new();
 
   output.push_str("\n\t// Fields\n");
@@ -87,7 +87,7 @@ fn write_fields(class: *const Il2CppClass, is_valuetype: bool) -> Result<String,
 }
 
 fn write_methods(class: *const Il2CppClass) -> Result<String, Box<dyn Error>> {
-  let il2cpp = api::get_il2cpp_api()?;
+  let il2cpp = api::get_il2cpp_api();
   let mut output = String::new();
 
   output.push_str("\n\t// Methods\n");
@@ -200,7 +200,7 @@ fn write_methods(class: *const Il2CppClass) -> Result<String, Box<dyn Error>> {
 }
 
 fn write_class(class: *const Il2CppClass) -> Result<String, Box<dyn Error>> {
-  let il2cpp = api::get_il2cpp_api()?;
+  let il2cpp = api::get_il2cpp_api();
   let mut output = String::new();
 
   let namespace = il2cpp.class_get_namespace(class)?;
@@ -286,7 +286,7 @@ fn write_class(class: *const Il2CppClass) -> Result<String, Box<dyn Error>> {
 }
 
 fn write_classes() -> Result<String, Box<dyn Error>> {
-  let il2cpp = api::get_il2cpp_api()?;
+  let il2cpp = api::get_il2cpp_api();
   let mut output = String::new();
 
   let domain = il2cpp.domain_get()?;

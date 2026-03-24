@@ -9,7 +9,7 @@ fn verify_pointer(il2cpp: &Il2CppApi, pointer: usize) -> bool {
 }
 
 pub fn dump() -> Result<(), Box<dyn Error>> {
-  let il2cpp = api::get_il2cpp_api()?;
+  let il2cpp = api::get_il2cpp_api();
   
   let mut name_map: HashMap<String, usize> = HashMap::new();
   let mut duplicates: HashMap<String, u32> = HashMap::new();
